@@ -1,28 +1,39 @@
-import 'package:flangapp_app/helpers/hex_converter.dart';
+import 'package:flangapp_pro/services/hex_color.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../config/app.dart';
-
 class ErrorPage extends StatefulWidget {
   final VoidCallback onBack;
+  final String color;
+  final String email;
+  final String image;
+  final String message;
+  final String buttonBackLabel;
+  final String buttonContactLabel;
 
   const ErrorPage({Key? key,
     required this.onBack,
+    required this.color,
+    required this.email,
+    required this.image,
+    required this.message,
+    required this.buttonBackLabel,
+    required this.buttonContactLabel
   }) : super(key: key);
 
   @override
-  _ErrorPageState createState() => _ErrorPageState();
+  State<ErrorPage> createState() => _ErrorPageState();
 }
 
 class _ErrorPageState extends State<ErrorPage> {
 
-  final Color color = HexConverter(Config.color);
-
   void _openEmail() async {
-    String email = "mailto://${Config.appEmail}";
-    if (await canLaunch(email)) {
-      await launch(email);
+    final Uri emailLaunchUri = Uri(
+      scheme: 'mailto',
+      path: widget.email,
+    );
+    if (await canLaunchUrl(emailLaunchUri)) {
+      await launchUrl(emailLaunchUri);
     }
   }
 
@@ -37,14 +48,11 @@ class _ErrorPageState extends State<ErrorPage> {
           children: [
             Padding(
               padding: const EdgeInsets.only(bottom: 20),
-              child: Image.asset(
-                  "assets/app/${Config.errorBrowserImage}",
-                  width: 250
-              ),
+              child: Image.network(widget.image, width: 100),
             ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 20),
-              child: Text(Config.messageErrorBrowser, style: const TextStyle(
+              child: Text(widget.message, style: const TextStyle(
                   decoration: TextDecoration.none,
                   color: Colors.black,
                   fontSize: 16,
@@ -53,24 +61,26 @@ class _ErrorPageState extends State<ErrorPage> {
             ),
             Padding(
               padding: const EdgeInsets.only(top: 20),
-              child: OutlinedButton(
-                child: Text(Config.backBtn, style: TextStyle(color: color)),
+              child: ElevatedButton(
                 style: ButtonStyle(
-                  overlayColor: MaterialStateProperty.all<Color>(
-                    HexConverter(Config.color).withOpacity(0.15),
+                  surfaceTintColor: MaterialStateProperty.all<Color>(
+                    HexColor.fromHex(widget.color).withOpacity(0.15),
                   ),
                 ),
                 onPressed: widget.onBack,
+                child: Text(widget.buttonBackLabel,
+                    style: TextStyle(color: HexColor.fromHex(widget.color))),
               ),
             ),
             TextButton(
-                child: Text(Config.contactBtn, style: TextStyle(color: color)),
                 style: ButtonStyle(
                   overlayColor: MaterialStateProperty.all<Color>(
-                    HexConverter(Config.color).withOpacity(0.15),
+                    HexColor.fromHex(widget.color).withOpacity(0.15),
                   ),
                 ),
-                onPressed: () => _openEmail()
+                onPressed: () => _openEmail(),
+                child: Text(widget.buttonContactLabel, style:
+                TextStyle(color: HexColor.fromHex(widget.color)))
             )
           ],
         ),

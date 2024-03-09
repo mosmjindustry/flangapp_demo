@@ -1,4 +1,4 @@
-import 'package:flangapp_app/enum/action_type.dart';
+import 'enum/action_type.dart';
 
 class NavigationItem {
   final String name;
