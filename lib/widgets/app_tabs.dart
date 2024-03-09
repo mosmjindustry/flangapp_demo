@@ -1,70 +1,94 @@
 import 'dart:io' show Platform;
 
-import 'package:flangapp_pro/services/hex_color.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:ionicons_named/ionicons_named.dart';
-import '../models/enum/action_type.dart';
+import 'package:flutter_svg/svg.dart';
+
+import '../config/app.dart';
+import '../enum/action_type.dart';
+import '../helpers/hex_converter.dart';
 import '../models/navigation_item.dart';
 
 class AppTabs extends StatefulWidget {
 
-  final List<NavigationItem> actions;
-  final int activeTab;
-  final Function onChange;
-  final String color;
+  final Function onTabChange;
+  final int currentIndex;
 
-  const AppTabs({
-    super.key,
-    required this.actions,
-    required this.activeTab,
-    required this.onChange,
-    required this.color
-  });
+  const AppTabs({Key? key,
+    required this.onTabChange,
+    required this.currentIndex
+  }) : super(key: key);
 
   @override
-  State<AppTabs> createState() => _AppTabsState();
-
+  _AppTabsState createState() => _AppTabsState();
 }
 
 class _AppTabsState extends State<AppTabs> {
 
+  final Color primaryColor = HexConverter(Config.activeColor);
+  final List<NavigationItem> _items = Config.mainNavigation;
+
   @override
   Widget build(BuildContext context) {
-    final List<NavigationItem> items = widget.actions;
-    return !Platform.isIOS ? BottomNavigationBar(
-      currentIndex: widget.activeTab,
-      selectedItemColor: HexColor.fromHex(widget.color),
+    return Platform.isAndroid ? _androidTabBar() : _iosTabBar();
+  }
+
+  Widget _androidTabBar() {
+    return BottomNavigationBar(
+      items: [
+        for (var i = 0; i < _items.length; i ++)
+          if (_items[i].type == ActionType.internal)
+            BottomNavigationBarItem(
+              icon: SvgPicture.asset("assets/app/${_items[i].icon}",
+                color: i != widget.currentIndex
+                    ? Colors.grey.shade600
+                    : primaryColor,
+                semanticsLabel: _items[i].name,
+                width: 26,
+              ),
+              label: _items[i].name,
+            ),
+      ],
+      currentIndex: widget.currentIndex,
+      selectedItemColor: primaryColor,
       showUnselectedLabels: true,
       showSelectedLabels: true,
       type: BottomNavigationBarType.fixed,
       unselectedFontSize: 11,
       selectedFontSize: 11,
-      unselectedLabelStyle: TextStyle(color: Colors.grey.shade600),
-      onTap: (int index) => widget.onChange(index),
-      items: [
-        for (var i = 0; i < items.length; i ++)
-          if (items[i].type == ActionType.internal)
-            BottomNavigationBarItem(
-              icon: Icon(ionicons[items[i].icon], size: 26),
-              label: items[i].name,
-            ),
-      ],
-    ) : CupertinoTabBar(
-      items: [
-        for (var i = 0; i < items.length; i ++)
-          if (items[i].type == ActionType.internal)
-            BottomNavigationBarItem(
-              icon: Icon(ionicons[items[i].icon], size: 26),
-              label: items[i].name,
-            ),
-      ],
-      currentIndex: widget.activeTab,
-      iconSize: 26,
-      activeColor:  HexColor.fromHex(widget.color),
-      inactiveColor: Colors.grey.shade600,
-      onTap: (int index) => widget.onChange(index),
+      unselectedLabelStyle: TextStyle(
+          color: Colors.grey.shade600
+      ),
+      onTap: _onItemTapped,
     );
+  }
+
+  Widget _iosTabBar() {
+    return CupertinoTabBar(
+      items: [
+        for (var i = 0; i < _items.length; i ++)
+          if (_items[i].type == ActionType.internal)
+            BottomNavigationBarItem(
+              icon: SvgPicture.asset("assets/app/${_items[i].icon}",
+                color: i != widget.currentIndex
+                    ? Colors.grey.shade600
+                    : primaryColor,
+                semanticsLabel: _items[i].name,
+                width: 26,
+              ),
+              label: _items[i].name,
+            ),
+      ],
+      currentIndex: widget.currentIndex,
+      iconSize: 26,
+      activeColor: primaryColor,
+      inactiveColor: Colors.grey.shade600,
+      onTap: _onItemTapped,
+    );
+  }
+
+  void _onItemTapped(int index) {
+    widget.onTabChange(index);
   }
 
 }
